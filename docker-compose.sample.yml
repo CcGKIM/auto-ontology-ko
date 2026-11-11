@@ -1,0 +1,68 @@
+# Adds the Wide World Importers sample database to the stack, so a single
+# command brings up everything including the data to ask questions about:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.sample.yml up -d --build
+#
+# (Or put the two lines below in .env and a plain `docker compose up -d --build`
+# does the same:
+#   COMPOSE_PATH_SEPARATOR=|
+#   COMPOSE_FILE=docker-compose.yml|docker-compose.sample.yml )
+#
+# Optional: add `SAMPLE_AUTO_COMPILE=true` to .env to also start the semantic
+# compilation automatically. It is off by default because compilation makes many
+# model calls (about 22 minutes on the sample); without it you turn it on in
+# Settings -> Semantic Compilation. A choice already saved in Settings is never
+# overridden.
+#
+# This file only adds to docker-compose.yml. Leave it out when Auto-Ontology
+# points at your own database.
+#
+# CONNECTION_STRINGS in .env must target this database, for example
+#   postgresql://postgres:<POSTGRES_PASSWORD>@postgres:5432/wideworldimporters
+#
+# Internal-test setup: the passwords written by scripts/setup.sh are fixed,
+# publicly documented test values, so every published port is bound to
+# 127.0.0.1 only. Nothing here is reachable from other machines. Do not use this
+# file for anything exposed to a network.
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+  pgadmin:
+    ports: !override
+      - "127.0.0.1:5050:80"
+  auto-ontology:
+    ports: !override
+      - "127.0.0.1:3001:3001"
+  # The ingestion service reads the source database, and the compilation
+  # setting, once at startup, so both have to be in place before it starts.
+  ingestion-service:
+    ports: !override
+      - "127.0.0.1:3002:3002"
+    depends_on:
+      sample-data:
+        condition: service_completed_successfully
+  auto-ontology-frontend:
+    ports: !override
+      - "127.0.0.1:3000:3000"
+
+  sample-data:
+    build:
+      context: ./sample-data
+    image: auto-ontology-sample-data:latest
+    container_name: auto-ontology-sample-data
+    env_file:
+      - .env
+    environment:
+      # Inside the compose network, not the host-published port.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      SAMPLE_AUTO_COMPILE: ${SAMPLE_AUTO_COMPILE:-false}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # The settings table that SAMPLE_AUTO_COMPILE writes to is created by the
+      # frontend's migration.
+      frontend-migrate:
+        condition: service_completed_successfully

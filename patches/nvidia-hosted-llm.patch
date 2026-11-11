@@ -1,0 +1,39 @@
+diff --git a/auto_ontology/utils/llm_invoke.py b/auto_ontology/utils/llm_invoke.py
+--- a/auto_ontology/utils/llm_invoke.py
++++ b/auto_ontology/utils/llm_invoke.py
+@@ -211,6 +211,17 @@ _NON_REASONING_MODEL_NAME = resolve("NON_REASONING", "MODEL")
+ _NON_REASONING_API_KEY = resolve("NON_REASONING", "API_KEY")
+ 
+ 
++# LOCAL PATCH (not upstream): the hosted NVIDIA catalog rejects ChatNVIDIA's
++# ``nvext.guided_json`` ("unknown field `guided_json`", HTTP 400) for current
++# models, but serves OpenAI-style tool calling. Route that host through
++# ChatOpenAI and use function calling for structured output.
++_NVIDIA_HOSTED_HOSTS = ("integrate.api.nvidia.com",)
++
++
++def _is_nvidia_hosted(base_url: str | None) -> bool:
++    return any(host in (base_url or "") for host in _NVIDIA_HOSTED_HOSTS)
++
++
+ def _build_client(
+     *,
+     model: str,
+@@ -225,7 +236,7 @@ def _build_client(
+     ``ChatOpenAI``, which supports structured output. Everything else uses
+     ``ChatNVIDIA``.
+     """
+-    if model.startswith(("openai/", "azure/", "aws/")):
++    if model.startswith(("openai/", "azure/", "aws/")) or _is_nvidia_hosted(base_url):
+         from langchain_openai import ChatOpenAI
+ 
+         return ChatOpenAI(
+@@ -474,6 +485,8 @@ def _structured_output_kwargs(llm: BaseChatModel) -> dict:
+     """
+     if _is_claude(llm):
+         return {"method": "function_calling", "tool_choice": None}
++    if _is_nvidia_hosted(str(getattr(llm, "openai_api_base", "") or "")):
++        return {"method": "function_calling"}
+     return {}
+ 
+ 

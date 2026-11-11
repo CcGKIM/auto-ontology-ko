@@ -1,0 +1,28 @@
+
+================================================================================
+ Sample questions for the Wide World Importers data
+ (the examples the Auto-Ontology README and docs suggest, with the answer
+  computed directly from the database so you can check the chat against it)
+================================================================================
+ 1. What was revenue for the USB food flash drive - sushi roll in Pennsylvania in June 2015?
+      expected: 588.80, from 3 invoice lines
+
+ 2. which products drive the most revenue and highest customer count?
+      expected: top product is "Air cushion machine (Blue)", revenue about 12.77M, 532 customers
+                (then 32 mm Anti static bubble wrap (Blue) 50m at about 7.34M)
+
+ 3. What was return on ad spend for the sushi roll flash drive in June 2015?
+      expected: no number. This data has no advertising columns, so a good answer
+                says it cannot be computed
+
+ 4. How many orders shipped last week?
+      expected: 0, or "no data". The data covers 2013-01-01 to 2016-05-31, so a
+                relative date like "last week" falls outside it
+
+ More: the sample data ships 41 evaluation questions with reference SQL. To list them:
+   docker compose -f docker-compose.yml -f docker-compose.sample.yml run --rm --no-deps \
+     --entrypoint cat sample-data /eval/datasets/wideworldimporters/evaluation.json
+
+ Open http://localhost:3000/chat once the semantic layer has finished compiling
+ (Settings -> Semantic Compilation).
+================================================================================
