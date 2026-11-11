@@ -71,8 +71,9 @@ if [ "$SKIP_PATCH" = 1 ]; then
   say "  건너뜀 (--skip-patch)"
 elif grep -q "_is_nvidia_hosted" "$TARGET"; then
   say "  이미 적용되어 있습니다."
-elif git apply --check "$PATCH" 2>/dev/null; then
-  git apply "$PATCH"
+elif tr -d '\r' < "$PATCH" | git apply --check 2>/dev/null; then
+  # the patch itself may have been checked out with CRLF; strip it before applying
+  tr -d '\r' < "$PATCH" | git apply
   # with core.autocrlf=true git writes the patched file back with CRLF
   tr -d '\r' < "$TARGET" > "$TARGET.tmp" && mv "$TARGET.tmp" "$TARGET"
   say "  적용했습니다."
