@@ -10,7 +10,7 @@
 
 **Windows 10/11**에서 아무것도 없는 상태로 시작해 Chat 질문까지 가는 순서입니다. 명령은 **Git Bash** 기준입니다.
 
-**한 줄 요약**: NVIDIA 계정으로 API 키 받기 → 저장소 받기 → **`bash scripts/setup.sh`** (키만 입력) → **`docker compose … up` 한 줄** → 로그인 → 질문.
+**한 줄 요약**: NVIDIA 계정으로 API 키 받기 → 저장소 받기 → **`NVIDIA_API_KEY=nvapi-… bash scripts/setup.sh`** → **`docker compose … up` 한 줄** → 로그인 → 질문.
 
 > **직접 준비하는 것은 NVIDIA 계정과 API 키뿐입니다.** DB 비밀번호와 로그인 비밀번호는 **내부 테스트용 고정값**이고, `.env` 수정과 코드 패치, 줄바꿈 변환은 스크립트가 합니다. 이 구성은 **내 컴퓨터(localhost)에서 샘플 DB로 써 보는 용도**입니다. 운영 환경에는 쓰지 마세요.
 
@@ -33,14 +33,15 @@ Windows 줄바꿈(CRLF)은 신경 쓰지 않아도 됩니다. 저장소의 `.git
 
 이 저장소에는 원본에 없는 `docker-compose.sample.yml`, `sample-data/`, `scripts/`, `patches/`, `README.ko.md`가 추가되어 있습니다. NVIDIA 원본만 받으면 2단계 스크립트가 없어 아래 순서가 동작하지 않습니다.
 
-## 2단계. 설정 — NVIDIA 키만 입력 ✅
+## 2단계. 설정 — NVIDIA 키만 넣어 실행 ✅
 ```bash
-bash scripts/setup.sh
+NVIDIA_API_KEY=nvapi-여기에-내-키 bash scripts/setup.sh
 ```
-```
-NVIDIA API 키 (nvapi-... , 입력은 화면에 보이지 않습니다):
-```
-키를 붙여 넣고 Enter. 입력은 화면에 표시되지 않습니다. 키를 미리 환경변수로 줄 수도 있습니다: `NVIDIA_API_KEY=nvapi-... bash scripts/setup.sh`
+`nvapi-여기에-내-키` 자리에 본인의 NVIDIA API 키를 넣고 한 줄로 실행합니다. 이 한 줄이 설정의 전부입니다.
+
+- 키는 `.env`에만 저장되고 화면에는 출력되지 않습니다.
+- 명령줄에 쓴 키는 터미널의 명령 기록(history)에 남습니다. 공용 PC라면 실행 후 기록을 지우세요.
+- 키 없이 `bash scripts/setup.sh`만 실행하면 키를 물어봅니다(입력은 화면에 보이지 않음).
 
 | 스크립트가 하는 일 | 내용 |
 |---|---|
@@ -96,7 +97,7 @@ docker compose logs ingestion-service | grep "Data ingestion finished"
 
 구축(Semantic Compilation)은 **기본이 꺼짐**입니다. 코드에 "한 번도 켠 적 없는 인스턴스는 스스로 컴파일을 시작하지 않는다"고 적힌 **옵트인** 설계이고, 환경변수로 기본값을 바꾸는 설정은 없습니다. 구축은 AI를 수십 번 호출해서 **비용이 나가기 때문**으로 보입니다. 그래서 한 줄을 실행해도 처음에는 `Enable Semantic Compilation`이 꺼진 채로 뜨고, 4단계에서 직접 켭니다.
 
-한 줄 실행만으로 구축까지 이어지게 하려면 2단계를 `bash scripts/setup.sh --auto-compile`로 실행하거나, `.env`에 이 한 줄을 직접 넣으세요.
+한 줄 실행만으로 구축까지 이어지게 하려면 2단계를 `NVIDIA_API_KEY=nvapi-… bash scripts/setup.sh --auto-compile`로 실행하거나, `.env`에 이 한 줄을 직접 넣으세요.
 ```
 SAMPLE_AUTO_COMPILE=true
 ```
@@ -149,7 +150,7 @@ SAMPLE_AUTO_COMPILE=true
 
 ## 정리해서 보면
 ```
-NVIDIA 계정·키 → 저장소 받기 → bash scripts/setup.sh (키만 입력) → docker compose up (샘플 DB 포함, 한 줄) → 로그인 → 구축 켜기 → 질문
+NVIDIA 계정·키 → 저장소 받기 → NVIDIA_API_KEY=nvapi-… bash scripts/setup.sh → docker compose up (샘플 DB 포함, 한 줄) → 로그인 → 구축 켜기 → 질문
 ```
 
 ## 참고: 샘플 데이터는 어디서 왔나요? (`auto-ontology-eval`) ✅
